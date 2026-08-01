@@ -424,9 +424,9 @@ By installing, copying, or using the Software, Licensee:
 **Author:** Ranjith Kumar  
 
 For license inquiries:  
-📧 support@aveontech.com  
+📧 contact@aveoninfotech.com  
 📞 [Phone to be provided]  
-🌐 www.aveontech.com  
+🌐 www.aveoninfotech.com  
 
 ---
 

@@ -450,8 +450,8 @@ See **[DEPLOYMENT.md](DEPLOYMENT.md)** for detailed deployment guide.
 - [LICENSE.md](LICENSE.md) - Terms & conditions
 
 **Contact:**
-- 📧 Email: support@aveontech.com
-- 🌐 Website: www.aveontech.com
+- 📧 Email: contact@aveoninfotech.com
+- 🌐 Website: www.aveoninfotech.com
 - 🐛 Issues: GitHub Issues
 - 📚 Docs: Documentation files
 

@@ -615,7 +615,7 @@ CREATE TABLE app_users (
 ## 💼 SUPPORT & MAINTENANCE
 
 ### Support Channels
-- Email: support@aveontech.com
+- Email: contact@aveoninfotech.com
 - Documentation: See DEPLOYMENT.md and README.md
 - Issue Tracking: GitHub Issues
 - Knowledge Base: Project documentation

@@ -537,8 +537,8 @@ For more information, see:
 
 For login issues or credential management questions:
 
-📧 **Email:** support@aveontech.com  
-🌐 **Website:** www.aveontech.com  
+📧 **Email:** contact@aveoninfotech.com  
+🌐 **Website:** www.aveoninfotech.com  
 📚 **Documentation:** See related files above
 
 ---

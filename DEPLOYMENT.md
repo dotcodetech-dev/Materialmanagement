@@ -1183,7 +1183,7 @@ pm2 status
 ## 📞 SUPPORT & MAINTENANCE
 
 ### **Support Channels**
-- Email: support@aveontech.com
+- Email: contact@aveoninfotech.com
 - Documentation: See README.md and this guide
 - Issue Tracking: GitHub Issues
 - GitHub Repository: https://github.com/dotcodetech-dev/Materialmanagement
@@ -1273,7 +1273,7 @@ psql -U materialflow_user -d materialflow_db -c "SELECT COUNT(*) FROM items;"
 **Version:** 1.0.0  
 
 For questions or support, contact:  
-📧 support@aveontech.com  
-🌐 https://www.aveontech.com  
+📧 contact@aveoninfotech.com  
+🌐 https://www.aveoninfotech.com  
 **Author:** Ranjith Kumar  
 **Organization:** Aveon Infotech Private Limited
