@@ -59,6 +59,14 @@
       e.target.hidden = true;
     }
   });
+  // Close modals with Escape key
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      document.querySelectorAll(".overlay:not([hidden])").forEach((el) => {
+        el.hidden = true;
+      });
+    }
+  });
 
   // Mobile drawer
   const sidebar = document.getElementById("sidebar");
