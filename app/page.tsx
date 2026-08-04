@@ -1393,14 +1393,15 @@ function printBatchLabels(batchResult: { batch_reference: string; item_name: str
   const totalPages = Math.ceil(batchResult.total_generated / labelsPerPage);
 
   w.document.write(`<html><head><title>${batchResult.batch_reference} Labels</title><style>
+    @page{size:A4;margin:5mm}
     *{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;margin:0;background:#fff}
     .header{padding:6px 8px;border-bottom:1px solid #ddd;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;font-size:10px}
     .page{display:grid;grid-template-columns:repeat(7,1fr);gap:0;padding:0;page-break-after:always;width:100%;background:#fff}
-    .label{width:100%;aspect-ratio:1/1;border:1.5px solid #000;padding:1px;text-align:center;display:flex;flex-direction:column;justify-content:flex-start;align-items:center;page-break-inside:avoid;overflow:hidden;font-family:Arial,sans-serif;background:#fff;gap:0.5px}
-    .label-name{font-size:8px;font-weight:700;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:98%;margin:1px 0 0 0}
-    .label-unit{font-size:7px;color:#222;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:98%;font-weight:600}
-    .label svg{width:26px;height:24px;max-width:96%;flex-shrink:0;margin:1.5px 0 1px 0}
-    .barcode-text{font-size:7px;color:#000;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:98%;letter-spacing:0.2px;font-weight:800;font-family:'Courier New',monospace}
+    .label{width:100%;aspect-ratio:1/1;border:1.5px solid #000;padding:2px;text-align:center;display:flex;flex-direction:column;justify-content:space-evenly;align-items:center;page-break-inside:avoid;overflow:hidden;font-family:Arial,sans-serif;background:#fff}
+    .label-name{font-size:13px;font-weight:700;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:98%}
+    .label-unit{font-size:11px;color:#222;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:98%;font-weight:700}
+    .label svg{width:94%;height:38px;max-width:96%;flex-shrink:0}
+    .barcode-text{font-size:11px;color:#000;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:98%;letter-spacing:0.2px;font-weight:800;font-family:'Courier New',monospace}
     .page-info{font-size:6px;color:#999;text-align:right;grid-column:1/-1;padding:2px 8px;border-top:1px solid #ddd;background:#f5f5f5}
     .no-print{display:none}@media print{.no-print{display:none!important}.header{display:none!important}.page-info{display:none!important}}
   </style></head><body>
@@ -1423,9 +1424,9 @@ function printBatchLabels(batchResult: { batch_reference: string; item_name: str
           const b = barcodes[labelCount];
           const div = document.createElement("div");
           div.className = "label";
-          div.innerHTML = '<div class="label-name">${batchResult.item_name}</div><div class="label-unit">Unit ' + b.unit_number + '</div><svg style="width:22px;height:20px"></svg><div class="barcode-text">' + b.barcode + '</div>';
+          div.innerHTML = '<div class="label-name">${batchResult.item_name}</div><div class="label-unit">Unit ' + b.unit_number + '</div><svg></svg><div class="barcode-text">' + b.barcode + '</div>';
           pageDiv.appendChild(div);
-          JsBarcode(div.querySelector("svg"), b.barcode, {format:"CODE128", width:0.6, height:16, displayValue:false, margin:0, textMargin:0});
+          JsBarcode(div.querySelector("svg"), b.barcode, {format:"CODE128", width:1.1, height:36, displayValue:false, margin:0, textMargin:0});
           labelCount++;
         }
       }

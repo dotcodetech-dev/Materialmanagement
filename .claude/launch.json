@@ -7,6 +7,13 @@
       "runtimeArgs": ["run", "dev"],
       "port": 3000,
       "autoPort": true
+    },
+    {
+      "name": "php",
+      "runtimeExecutable": "D:\\Ranjith\\tools\\php\\php.exe",
+      "runtimeArgs": ["spark", "serve", "--host", "localhost", "--port", "8080"],
+      "cwd": "D:\\Ranjith\\Material Management\\materialflow-php",
+      "port": 8080
     }
   ]
 }
