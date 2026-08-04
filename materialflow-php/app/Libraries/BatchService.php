@@ -167,7 +167,33 @@ class BatchService
     }
 
     /**
-     * Full batch detail: header, barcodes, print history, scan stats, export history.
+     * Get barcodes for a batch (for print pages, not API).
+     * Returns up to 10,000 rows at a time; print pages can handle it.
+     *
+     * @return list<array{barcode: string, unit_number: int}>|null
+     */
+    public function getBarcodes(string $batchId): ?array
+    {
+        $batch = $this->db->table('barcode_batches')->select('id')->where('id', $batchId)->get()->getRowArray();
+        if ($batch === null) {
+            return null;
+        }
+
+        $barcodes = $this->db->table('batch_barcodes')
+            ->select('barcode_code AS barcode, unit_number')
+            ->where('batch_id', $batchId)
+            ->orderBy('unit_number', 'ASC')
+            ->get()->getResultArray();
+        foreach ($barcodes as &$b) {
+            $b['unit_number'] = (int) $b['unit_number'];
+        }
+
+        return $barcodes;
+    }
+
+    /**
+     * Full batch detail: header, print history, scan stats, export history.
+     * Barcodes are not included (too large for 1000+ units; use getBarcodes() for print pages).
      */
     public function details(string $batchId): ?array
     {
@@ -184,15 +210,6 @@ class BatchService
 
         if ($batch === null) {
             return null;
-        }
-
-        $barcodes = $this->db->table('batch_barcodes')
-            ->select('barcode_code AS barcode, unit_number')
-            ->where('batch_id', $batchId)
-            ->orderBy('unit_number', 'ASC')
-            ->get()->getResultArray();
-        foreach ($barcodes as &$b) {
-            $b['unit_number'] = (int) $b['unit_number'];
         }
 
         $printHistory = $this->db->query(
@@ -220,7 +237,6 @@ class BatchService
 
         return [
             'batch'          => $batch,
-            'barcodes'       => $barcodes,
             'print_history'  => $printHistory,
             'scan_stats'     => array_map('intval', $stats),
             'export_history' => $exports,

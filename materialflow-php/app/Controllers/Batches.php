@@ -22,13 +22,14 @@ class Batches extends BaseController
      */
     public function printLabels(string $batchId)
     {
-        $detail = (new BatchService())->details($batchId);
+        $service = new BatchService();
+        $detail = $service->details($batchId);
         if ($detail === null) {
             return redirect()->to('/batches')->with('error', 'Batch not found.');
         }
 
         $batch    = $detail['batch'];
-        $barcodes = $detail['barcodes'];
+        $barcodes = $service->getBarcodes($batchId) ?? [];
         $max      = (int) $batch['quantity_generated'];
 
         $from = (int) ($this->request->getGet('from') ?? 1);
