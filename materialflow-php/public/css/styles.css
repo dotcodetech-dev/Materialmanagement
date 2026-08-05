@@ -399,9 +399,17 @@ input:focus, select:focus {
 .close-btn {
   border: 0; background: none; font-size: 22px;
   cursor: pointer; color: var(--outline);
-  padding: 4px 8px; border-radius: 8px;
+  padding: 8px 12px; border-radius: 8px;
+  min-width: 44px; min-height: 44px; display: flex; align-items: center; justify-content: center;
 }
 .close-btn:hover { background: var(--surface-container); color: var(--on-surface); }
+.close-btn:active { background: var(--surface-dim); }
+
+/* Form input focus states */
+input:focus, textarea:focus, select:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: -2px;
+}
 
 /* ===== Barcode ===== */
 .barcode-content { text-align: center; }

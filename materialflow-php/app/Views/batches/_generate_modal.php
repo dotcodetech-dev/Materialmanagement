@@ -1,9 +1,9 @@
 <!-- Batch barcode generation dialog (opened from the Items table) -->
-<div class="overlay" id="batchModal" hidden>
+<div class="overlay" id="batchModal" hidden onclick="if(event.target.id==='batchModal') closeModal('batchModal')">
   <div class="modal" onclick="event.stopPropagation()">
     <div class="modal-head">
       <h2 id="batchModalTitle">Generate batch barcodes</h2>
-      <button type="button" class="close-btn" onclick="closeModal('batchModal')" title="Close (Esc)"><span class="material-symbols-outlined">close</span></button>
+      <button type="button" class="close-btn" onclick="closeModal('batchModal')" title="Close (Esc)" style="cursor:pointer;padding:8px;min-width:40px;min-height:40px"><span class="material-symbols-outlined">close</span></button>
     </div>
 
     <form id="batchForm">
