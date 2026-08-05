@@ -384,6 +384,7 @@ input:focus, select:focus {
   background: rgba(0, 8, 21, 0.4); backdrop-filter: blur(4px);
   display: grid; place-items: center;
 }
+.overlay[hidden] { display: none !important; }
 .modal {
   background: var(--surface-lowest);
   border-radius: 18px; padding: 28px;
