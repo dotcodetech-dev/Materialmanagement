@@ -71,7 +71,7 @@ class Reports extends BaseController
         $content = stream_get_contents($out);
         fclose($out);
 
-        $filename = $reportType . '-report-' . substr(current_time('mysql'), 0, 10) . '.csv';
+        $filename = $reportType . '-report-' . date('Y-m-d') . '.csv';
 
         return $this->response
             ->setHeader('Content-Type', 'text/csv; charset=utf-8')

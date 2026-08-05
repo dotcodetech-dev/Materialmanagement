@@ -138,7 +138,7 @@ class Scan extends BaseController
                     ->where('status', 'UNSCANNED')
                     ->update([
                         'status'      => 'SCANNED',
-                        'scanned_at'  => current_time('mysql'),
+                        'scanned_at'  => date('Y-m-d H:i:s'),
                         'scanned_by'  => $userId,
                         'movement_id' => $movementId,
                     ]);
