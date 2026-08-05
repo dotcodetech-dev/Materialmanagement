@@ -41,4 +41,14 @@ abstract class BaseController extends Controller
     {
         return $this->response->setStatusCode($status)->setJSON(['error' => $message] + $extra);
     }
+
+    protected function canEdit(): bool
+    {
+        return in_array(session('role'), ['ADMIN', 'MANAGER', 'STOREKEEPER'], true);
+    }
+
+    protected function canAdmin(): bool
+    {
+        return session('role') === 'ADMIN';
+    }
 }

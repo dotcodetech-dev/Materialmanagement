@@ -43,13 +43,16 @@
         method: "POST",
         body: { barcode: code, movement_type: typeSelect.value },
       });
-      const label = data.is_batch ? data.item_name + " (Unit " + data.unit_number + ")" : data.item_name;
+      const itemName = String(data.item_name || "").substring(0, 100);
+      const unitNumber = String(data.unit_number || "").substring(0, 10);
+      const label = data.is_batch ? itemName + " (Unit " + unitNumber + ")" : itemName;
       record(label, code, true);
-      flash(data.is_batch ? "✓ " + data.item_name + " - Unit " + data.unit_number + " scanned" : "✓ " + data.item_name + " saved");
+      flash(data.is_batch ? "✓ " + itemName + " - Unit " + unitNumber + " scanned" : "✓ " + itemName + " saved");
     } catch (err) {
       if (err.status === 409 && err.details) {
         const when = err.details.scanned_at ? new Date(err.details.scanned_at.replace(" ", "T") + "Z").toLocaleString() : "unknown time";
-        flash("❌ Barcode already scanned! Previously scanned by " + (err.details.scanned_by || "unknown user") + " on " + when);
+        const scannedBy = String(err.details.scanned_by || "unknown user").substring(0, 100);
+        flash("❌ Barcode already scanned! Previously scanned by " + scannedBy + " on " + when);
       } else {
         flash("❌ " + err.message);
       }

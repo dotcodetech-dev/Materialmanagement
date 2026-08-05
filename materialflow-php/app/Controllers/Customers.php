@@ -12,7 +12,7 @@ class Customers extends BaseController
             'title'     => 'Customers',
             'heading'   => 'Customers',
             'customers' => model(CustomerModel::class)->activeCustomers(),
-            'canEdit'   => in_array(session('role'), ['ADMIN', 'MANAGER', 'STOREKEEPER'], true),
+            'canEdit'   => $this->canEdit(),
         ]);
     }
 

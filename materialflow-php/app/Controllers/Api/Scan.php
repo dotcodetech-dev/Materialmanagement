@@ -90,10 +90,11 @@ class Scan extends BaseController
 
                 if ($itemRow === null) {
                     $db->transRollback();
+                    log_message('warning', 'Scan attempt with invalid barcode: ' . $barcode . ' from user ' . $userId);
 
                     return $this->response->setStatusCode(404)->setJSON([
                         'error'   => 'BARCODE_NOT_FOUND',
-                        'message' => 'Barcode not found: ' . $barcode,
+                        'message' => 'Barcode not found',
                     ]);
                 }
             } else {
@@ -137,7 +138,7 @@ class Scan extends BaseController
                     ->where('status', 'UNSCANNED')
                     ->update([
                         'status'      => 'SCANNED',
-                        'scanned_at'  => date('Y-m-d H:i:s'),
+                        'scanned_at'  => current_time('mysql'),
                         'scanned_by'  => $userId,
                         'movement_id' => $movementId,
                     ]);

@@ -12,7 +12,7 @@ class Batches extends BaseController
             'title'   => 'Batch History',
             'heading' => 'Batch History',
             'batches' => (new BatchService())->statusList(),
-            'canEdit' => in_array(session('role'), ['ADMIN', 'MANAGER', 'STOREKEEPER'], true),
+            'canEdit' => $this->canEdit(),
         ]);
     }
 

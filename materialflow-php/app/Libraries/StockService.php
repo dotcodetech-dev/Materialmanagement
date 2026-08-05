@@ -137,7 +137,7 @@ class StockService
 
         $today = (int) ($this->db->table('stock_movements')
             ->selectCount('id')
-            ->where('occurred_at >=', date('Y-m-d') . ' 00:00:00')
+            ->where('occurred_at >=', substr(current_time('mysql'), 0, 10) . ' 00:00:00')
             ->get()->getRowArray()['id'] ?? 0);
 
         return [

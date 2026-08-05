@@ -19,7 +19,7 @@ class Items extends BaseController
             'items'   => $stock->itemsWithBalance($q),
             'q'       => (string) ($q ?? ''),
             'units'   => ItemModel::UNITS,
-            'canEdit' => in_array(session('role'), ['ADMIN', 'MANAGER', 'STOREKEEPER'], true),
+            'canEdit' => $this->canEdit(),
         ]);
     }
 

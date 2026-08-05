@@ -39,7 +39,9 @@
             barcode_prefix: document.getElementById("batchPrefix").value.trim() || null,
           },
         });
-        flash("✓ Generated " + data.total_generated_full + " barcodes for batch " + data.batch_reference);
+        const batchRef = String(data.batch_reference || "").substring(0, 200);
+        const totalGen = String(data.total_generated_full || "").substring(0, 10);
+        flash("✓ Generated " + totalGen + " barcodes for batch " + batchRef);
         document.getElementById("batchModalTitle").textContent = "Batch generated";
         document.getElementById("batchForm").hidden = true;
         const result = document.getElementById("batchResult");

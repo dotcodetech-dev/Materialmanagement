@@ -280,7 +280,7 @@ class BatchService
 
             $this->db->table('barcode_batches')->where('id', $batchId)->update([
                 'total_printed'   => $newTotal,
-                'last_printed_at' => date('Y-m-d H:i:s'),
+                'last_printed_at' => current_time('mysql'),
                 'last_printed_by' => $userId,
                 'status_detail'   => $newTotal >= (int) $batch['quantity_total'] ? 'FULLY_PRINTED' : 'PARTIALLY_PRINTED',
             ]);
@@ -320,7 +320,7 @@ class BatchService
         fputcsv($out, ['Batch Export - ' . $batch['batch_reference']]);
         fputcsv($out, ['Item: ' . $batch['item_name']]);
         fputcsv($out, ['Generated: ' . $batch['quantity_generated'] . ' / ' . $batch['quantity_total']]);
-        fputcsv($out, ['Export Date: ' . date('Y-m-d H:i:s') . ' UTC']);
+        fputcsv($out, ['Export Date: ' . current_time('mysql') . ' UTC']);
         fputcsv($out, []);
         fputcsv($out, ['Unit Number', 'Barcode', 'Status', 'Scanned At', 'Scanned By']);
         foreach ($rows as $r) {
