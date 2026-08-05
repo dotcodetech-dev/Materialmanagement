@@ -23,6 +23,11 @@ class Items extends BaseController
         ]);
     }
 
+    public function create()
+    {
+        return redirect()->to('/items');
+    }
+
     public function store()
     {
         [$data, $error] = $this->validated();

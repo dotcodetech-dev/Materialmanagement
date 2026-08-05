@@ -16,6 +16,11 @@ class Customers extends BaseController
         ]);
     }
 
+    public function create()
+    {
+        return redirect()->to('/customers');
+    }
+
     public function store()
     {
         [$data, $error] = $this->validated();
