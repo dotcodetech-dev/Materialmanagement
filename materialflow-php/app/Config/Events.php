@@ -55,3 +55,19 @@ Events::on('pre_system', static function (): void {
         }
     }
 });
+
+/*
+ * Force the MySQL session timezone to UTC on every request so timestamps
+ * written by MySQL (DEFAULT CURRENT_TIMESTAMP on occurred_at, created_at,
+ * etc.) match timestamps written by PHP (date('Y-m-d H:i:s')). Without
+ * this, MySQL uses the server timezone (e.g. IST on the dev machine) while
+ * PHP uses appTimezone='UTC', producing a drift that breaks date filters
+ * on the stock report, ledger, and dashboard's "today" counters.
+ */
+Events::on('post_controller_constructor', static function (): void {
+    try {
+        \Config\Database::connect()->query("SET time_zone = '+00:00'");
+    } catch (\Throwable $e) {
+        log_message('warning', 'Failed to set DB timezone: ' . $e->getMessage());
+    }
+});
