@@ -10,6 +10,11 @@ use CodeIgniter\Router\RouteCollection;
 $routes->get('login', 'Auth::login');
 $routes->post('login', 'Auth::attempt');
 
+// SEO: sitemap, robots, and llms.txt — public, no auth
+$routes->get('sitemap.xml', 'Seo::sitemap');
+$routes->get('robots.txt', 'Seo::robots');
+$routes->get('llms.txt', 'Seo::llms');
+
 // Authenticated (any role) — logout + items view are shared by everyone
 $routes->group('', ['filter' => 'auth'], static function ($routes) {
     $routes->get('logout', 'Auth::logout');

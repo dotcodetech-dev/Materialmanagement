@@ -9,6 +9,9 @@ $seoKeywords    = 'AVEON INFOTECH, Aveon Infotech, Software Development, Mobile 
 $seoAuthor      = 'AVEON INFOTECH';
 $seoUrl         = current_url();
 ?>
+<link rel="canonical" href="<?= esc($seoUrl) ?>">
+<link rel="sitemap" type="application/xml" href="<?= esc(base_url('sitemap.xml')) ?>">
+<link rel="alternate" type="text/plain" title="llms.txt" href="<?= esc(base_url('llms.txt')) ?>">
 <meta name="description" content="<?= esc($seoDescription) ?>">
 <meta name="keywords" content="<?= esc($seoKeywords) ?>">
 <meta name="author" content="<?= esc($seoAuthor) ?>">
