@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>AVEON INFOTECH — Software Development, Mobile Apps, College / School / Hostel Management, GST Flow, NAAC / IQAC</title>
+  <title>Sign in — MaterialFlow</title>
   <?= view('partials/seo') ?>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="<?= base_url('css/styles.css') ?>">
