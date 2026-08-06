@@ -6,7 +6,6 @@ $navItems = [
     ['/customers', 'group', 'Customers', null],
     ['/inward', 'move_to_inbox', 'Inward', 'editor'],
     ['/outward', 'outbox', 'Outward', 'editor'],
-    ['/labels', 'qr_code_2', 'Labels', 'editor'],
     ['/ledger', 'menu_book', 'Stock Ledger', null],
     ['/reports', 'assessment', 'Reports', null],
     ['/batches', 'history', 'Batch History', null],
