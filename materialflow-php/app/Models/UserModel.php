@@ -16,7 +16,7 @@ class UserModel extends Model
     protected $allowedFields    = ['id', 'full_name', 'email', 'password_hash', 'role', 'is_active'];
     protected $beforeInsert     = ['assignId'];
 
-    public const ROLES = ['ADMIN', 'STOREKEEPER', 'MANAGER', 'VIEWER'];
+    public const ROLES = ['ADMIN', 'STOREKEEPER', 'MANAGER', 'STAFF', 'VIEWER'];
 
     public function findByEmail(string $email): ?array
     {

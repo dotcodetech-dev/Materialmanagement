@@ -72,7 +72,7 @@
         </label>
         <label>Role
           <select name="role">
-            <?php foreach (['STOREKEEPER', 'MANAGER', 'ADMIN', 'VIEWER'] as $r): ?>
+            <?php foreach (['STOREKEEPER', 'MANAGER', 'ADMIN', 'STAFF', 'VIEWER'] as $r): ?>
               <option><?= esc($r) ?></option>
             <?php endforeach ?>
           </select>

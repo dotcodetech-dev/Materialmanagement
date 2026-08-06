@@ -1,20 +1,32 @@
 <?php
 $brand   = mf_settings();
-$navItems = [
-    ['/', 'dashboard', 'Dashboard', null],
-    ['/items', 'inventory_2', 'Items', null],
-    ['/customers', 'group', 'Customers', null],
-    ['/inward', 'move_to_inbox', 'Inward', 'editor'],
-    ['/outward', 'outbox', 'Outward', 'editor'],
-    ['/ledger', 'menu_book', 'Stock Ledger', null],
-    ['/reports', 'assessment', 'Reports', null],
-    ['/batches', 'history', 'Batch History', null],
-];
 $role    = session('role');
 $isAdmin = $role === 'ADMIN';
+$isStaff = $role === 'STAFF';
 $canEdit = in_array($role, ['ADMIN', 'MANAGER', 'STOREKEEPER'], true);
-if ($isAdmin) {
-    $navItems[] = ['/settings', 'settings', 'Settings', null];
+$canScan = in_array($role, ['ADMIN', 'MANAGER', 'STOREKEEPER', 'STAFF'], true);
+
+if ($isStaff) {
+    // STAFF gets a minimal nav: Items (stock view), Inward, Outward.
+    $navItems = [
+        ['/items', 'inventory_2', 'Items', null],
+        ['/inward', 'move_to_inbox', 'Inward', 'scanner'],
+        ['/outward', 'outbox', 'Outward', 'scanner'],
+    ];
+} else {
+    $navItems = [
+        ['/', 'dashboard', 'Dashboard', null],
+        ['/items', 'inventory_2', 'Items', null],
+        ['/customers', 'group', 'Customers', null],
+        ['/inward', 'move_to_inbox', 'Inward', 'scanner'],
+        ['/outward', 'outbox', 'Outward', 'scanner'],
+        ['/ledger', 'menu_book', 'Stock Ledger', null],
+        ['/reports', 'assessment', 'Reports', null],
+        ['/batches', 'history', 'Batch History', null],
+    ];
+    if ($isAdmin) {
+        $navItems[] = ['/settings', 'settings', 'Settings', null];
+    }
 }
 $currentPath = '/' . trim(service('request')->getUri()->getPath(), '/');
 $notice      = session()->getFlashdata('notice');
@@ -54,6 +66,7 @@ $error       = session()->getFlashdata('error');
     <nav class="sidebar-nav">
       <?php foreach ($navItems as [$href, $icon, $label, $need]): ?>
         <?php if ($need === 'editor' && ! $canEdit) { continue; } ?>
+        <?php if ($need === 'scanner' && ! $canScan) { continue; } ?>
         <a class="sidebar-link<?= $currentPath === $href ? ' active' : '' ?>" href="<?= base_url(ltrim($href, '/')) ?: base_url() ?>">
           <span class="material-symbols-outlined"><?= $icon ?></span>
           <span><?= esc($label) ?></span>
@@ -95,10 +108,11 @@ $error       = session()->getFlashdata('error');
   </main>
 
   <nav class="bottom-nav">
-    <a class="bnav-item<?= $currentPath === '/' ? ' active' : '' ?>" href="<?= base_url() ?>">
+    <?php $home = $isStaff ? 'items' : ''; ?>
+    <a class="bnav-item<?= $currentPath === '/' || ($isStaff && $currentPath === '/items') ? ' active' : '' ?>" href="<?= base_url($home) ?>">
       <span class="material-symbols-outlined">home</span><span>Home</span>
     </a>
-    <?php if ($canEdit): ?>
+    <?php if ($canScan): ?>
     <a class="bnav-item" href="<?= base_url('inward') ?>">
       <span class="material-symbols-outlined">qr_code_scanner</span><span>Scan</span>
     </a>

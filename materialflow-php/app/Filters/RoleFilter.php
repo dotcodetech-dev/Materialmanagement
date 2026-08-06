@@ -13,8 +13,12 @@ use CodeIgniter\HTTP\ResponseInterface;
 class RoleFilter implements FilterInterface
 {
     private const GROUPS = [
-        'admin'  => ['ADMIN'],
-        'editor' => ['ADMIN', 'MANAGER', 'STOREKEEPER'],
+        'admin'     => ['ADMIN'],
+        'editor'    => ['ADMIN', 'MANAGER', 'STOREKEEPER'],
+        // STAFF can scan (inward/outward) but cannot edit items/customers.
+        'scanner'   => ['ADMIN', 'MANAGER', 'STOREKEEPER', 'STAFF'],
+        // Everything STAFF may NOT see (dashboard, ledger, reports, batches, customers).
+        'non_staff' => ['ADMIN', 'MANAGER', 'STOREKEEPER', 'VIEWER'],
     ];
 
     public function before(RequestInterface $request, $arguments = null)
@@ -38,7 +42,10 @@ class RoleFilter implements FilterInterface
 
         session()->setFlashdata('error', 'You do not have permission to access that page.');
 
-        return redirect()->to('/');
+        // STAFF has no dashboard — send them to their landing page instead.
+        $landing = session('role') === 'STAFF' ? '/inward' : '/';
+
+        return redirect()->to($landing);
     }
 
     public function after(RequestInterface $request, ResponseInterface $response, $arguments = null)

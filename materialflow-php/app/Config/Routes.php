@@ -10,12 +10,15 @@ use CodeIgniter\Router\RouteCollection;
 $routes->get('login', 'Auth::login');
 $routes->post('login', 'Auth::attempt');
 
-// Authenticated (any role)
+// Authenticated (any role) — logout + items view are shared by everyone
 $routes->group('', ['filter' => 'auth'], static function ($routes) {
     $routes->get('logout', 'Auth::logout');
-    $routes->get('/', 'Dashboard::index');
-
     $routes->get('items', 'Items::index');
+});
+
+// Non-STAFF (ADMIN/MANAGER/STOREKEEPER/VIEWER) — dashboard + read-only reports/ledger/customers/batches
+$routes->group('', ['filter' => 'role:non_staff'], static function ($routes) {
+    $routes->get('/', 'Dashboard::index');
     $routes->get('customers', 'Customers::index');
     $routes->get('ledger', 'Ledger::index');
     $routes->get('ledger/export', 'Ledger::exportCsv');
@@ -26,7 +29,13 @@ $routes->group('', ['filter' => 'auth'], static function ($routes) {
     $routes->get('batches/(:segment)/export', 'Batches::exportCsv/$1');
 });
 
-// Editors: ADMIN, MANAGER, STOREKEEPER
+// Scanners: ADMIN, MANAGER, STOREKEEPER, STAFF — inward/outward pages
+$routes->group('', ['filter' => 'role:scanner'], static function ($routes) {
+    $routes->get('inward', 'Scan::inward');
+    $routes->get('outward', 'Scan::outward');
+});
+
+// Editors: ADMIN, MANAGER, STOREKEEPER — item/customer/movement CRUD + label printing
 $routes->group('', ['filter' => 'role:editor'], static function ($routes) {
     $routes->get('items/new', 'Items::create');
     $routes->post('items/new', 'Items::store');
@@ -40,8 +49,6 @@ $routes->group('', ['filter' => 'role:editor'], static function ($routes) {
     $routes->post('customers/(:segment)/edit', 'Customers::update/$1');
     $routes->post('customers/(:segment)/delete', 'Customers::deactivate/$1');
 
-    $routes->get('inward', 'Scan::inward');
-    $routes->get('outward', 'Scan::outward');
     $routes->get('movements/new', 'Movements::create');
     $routes->post('movements/new', 'Movements::store');
 
@@ -60,9 +67,13 @@ $routes->group('', ['filter' => 'role:admin'], static function ($routes) {
 });
 
 // JSON API (AJAX; CSRF via X-CSRF-TOKEN header)
-$routes->group('api', ['filter' => 'role:editor'], static function ($routes) {
+// Scan endpoints are usable by STAFF too.
+$routes->group('api', ['filter' => 'role:scanner'], static function ($routes) {
     $routes->post('scan/validate', 'Api\Scan::check');
     $routes->post('scan/commit', 'Api\Scan::commit');
+});
+// Editor-only: barcode generation, batch generation, print counters.
+$routes->group('api', ['filter' => 'role:editor'], static function ($routes) {
     $routes->get('items/next-barcode', 'Api\Items::nextBarcode');
     $routes->post('batches', 'Api\Batches::generate');
     $routes->post('batches/(:segment)/printed', 'Api\Batches::recordPrint/$1');

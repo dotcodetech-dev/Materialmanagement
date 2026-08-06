@@ -9,10 +9,15 @@ class Auth extends BaseController
     public function login()
     {
         if (session('user_id')) {
-            return redirect()->to('/');
+            return redirect()->to(self::landingFor(session('role')));
         }
 
         return view('auth/login', ['error' => session()->getFlashdata('error')]);
+    }
+
+    private static function landingFor(?string $role): string
+    {
+        return $role === 'STAFF' ? '/inward' : '/';
     }
 
     public function attempt()
@@ -47,7 +52,7 @@ class Auth extends BaseController
             'role'      => $user['role'],
         ]);
 
-        return redirect()->to('/');
+        return redirect()->to(self::landingFor($user['role']));
     }
 
     public function logout()
