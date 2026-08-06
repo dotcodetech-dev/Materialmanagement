@@ -3,11 +3,27 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Sign in — MaterialFlow</title>
+  <title>AVEON INFOTECH — Software Development, Mobile Apps, College / School / Hostel Management, GST Flow, NAAC / IQAC</title>
+  <?= view('partials/seo') ?>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="<?= base_url('css/styles.css') ?>">
 </head>
 <body>
+<!-- Visually-hidden SEO block: crawlers see it, users don't. -->
+<div style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden">
+  <h1>AVEON INFOTECH</h1>
+  <p>AVEON INFOTECH offers Software Development, Mobile app development, College Management, School Management, Hostel Management, Aveon GST Flow, Shallon Management, and NAAC / IQAC Software.</p>
+  <ul>
+    <li>Software Development</li>
+    <li>Mobile app development</li>
+    <li>College management</li>
+    <li>School management</li>
+    <li>Hostel Management</li>
+    <li>Aveon GST Flow</li>
+    <li>Shallon Management</li>
+    <li>NAAC / IQAC Software</li>
+  </ul>
+</div>
   <div class="login-page">
     <div class="login-card">
       <div class="login-brand">
