@@ -82,6 +82,7 @@ $routes->group('api', ['filter' => 'role:editor'], static function ($routes) {
     $routes->get('items/next-barcode', 'Api\Items::nextBarcode');
     $routes->post('batches', 'Api\Batches::generate');
     $routes->post('batches/(:segment)/printed', 'Api\Batches::recordPrint/$1');
+    $routes->post('batches/(:segment)/verify', 'Api\Batches::verify/$1');
 });
 $routes->group('api', ['filter' => 'auth'], static function ($routes) {
     $routes->get('batches/(:segment)', 'Api\Batches::details/$1');

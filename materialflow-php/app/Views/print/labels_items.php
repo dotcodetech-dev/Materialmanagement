@@ -32,7 +32,7 @@
         const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
         div.append(h4, p, svg);
         grid.appendChild(div);
-        JsBarcode(svg, item.barcode, {format:"CODE128",width:<?= $sz['bw'] ?>,height:<?= $sz['bh'] ?>,displayValue:true,fontSize:<?= $sz['fs'] ?>,margin:2,textMargin:1});
+        JsBarcode(svg, item.barcode, {format:"CODE128",width:<?= $sz['bw'] ?>,height:<?= $sz['bh'] ?>,displayValue:true,fontSize:<?= $sz['fs'] ?>,margin:12,textMargin:2});
       }
     });
   </script>

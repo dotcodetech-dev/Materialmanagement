@@ -20,7 +20,7 @@ class BatchService
     public function __construct(?BaseConnection $db = null)
     {
         $this->db = $db ?? db_connect();
-        helper('uuid');
+        helper(['uuid', 'barcode']);
     }
 
     /**
@@ -45,16 +45,6 @@ class BatchService
             throw new RuntimeException('Item not found', 404);
         }
 
-        // Default prefix includes the batch reference, so codes from different
-        // batches of the same item can never collide.
-        $prefix = trim((string) $prefix);
-        if ($prefix === '') {
-            $prefix = $item['barcode'] . '-' . strtoupper(preg_replace('/\s+/', '-', $reference)) . '-';
-        }
-        if (strlen($prefix) + 6 > 64) {
-            throw new RuntimeException('Barcode prefix too long (max ' . (64 - 6) . ' characters).', 400);
-        }
-
         $batchId = uuid_v4();
 
         $this->db->transBegin();
@@ -67,12 +57,18 @@ class BatchService
                 throw new RuntimeException('Batch reference already exists', 409);
             }
 
+            // Reserve a contiguous block of global serials. FOR UPDATE locks the
+            // MAX row so two concurrent generations can't hand out the same range;
+            // UNIQUE(unit_serial)/UNIQUE(barcode_code) are the final backstop.
+            $maxRow    = $this->db->query('SELECT COALESCE(MAX(unit_serial), 0) AS m FROM batch_barcodes FOR UPDATE')->getRowArray();
+            $baseSerial = (int) ($maxRow['m'] ?? 0);
+
             $this->db->table('barcode_batches')->insert([
                 'id'              => $batchId,
                 'item_id'         => $itemId,
                 'batch_reference' => $reference,
                 'quantity_total'  => $quantity,
-                'barcode_prefix'  => $prefix,
+                'barcode_prefix'  => mf_barcode_prefix(),
                 'status'          => 'PENDING',
                 'created_by'      => $userId,
             ]);
@@ -80,15 +76,19 @@ class BatchService
             $barcodes = [];
             $rows     = [];
             for ($i = 1; $i <= $quantity; $i++) {
-                $code       = $prefix . str_pad((string) $i, 6, '0', STR_PAD_LEFT);
+                $serial     = $baseSerial + $i;
+                $code       = mf_unit_barcode($serial);
                 $barcodes[] = ['barcode' => $code, 'unit_number' => $i];
                 $rows[]     = [
-                    'id'           => uuid_v4(),
-                    'batch_id'     => $batchId,
-                    'barcode_code' => $code,
-                    'item_id'      => $itemId,
-                    'unit_number'  => $i,
-                    'status'       => 'UNSCANNED',
+                    'id'              => uuid_v4(),
+                    'batch_id'        => $batchId,
+                    'barcode_code'    => $code,
+                    'unit_serial'     => $serial,
+                    'item_id'         => $itemId,
+                    'item_code'       => $item['barcode'],
+                    'batch_reference' => $reference,
+                    'unit_number'     => $i,
+                    'status'          => 'UNSCANNED',
                 ];
             }
 
@@ -108,7 +108,7 @@ class BatchService
                 'action'           => 'GENERATED',
                 'printed_quantity' => null,
                 'printed_by'       => $userId,
-                'action_details'   => json_encode(['quantity' => $quantity, 'prefix' => $prefix]),
+                'action_details'   => json_encode(['quantity' => $quantity, 'prefix' => mf_barcode_prefix()]),
             ]);
 
             $this->db->transCommit();
@@ -121,7 +121,7 @@ class BatchService
                 throw new RuntimeException(
                     str_contains($e->getMessage(), 'batch_reference')
                         ? 'Batch reference already exists'
-                        : 'Barcode prefix collides with an existing batch. Choose another prefix.',
+                        : 'Barcode serial collision — please retry.',
                     409
                 );
             }
@@ -148,7 +148,7 @@ class BatchService
         return $this->db->query(
             'SELECT bb.id, bb.batch_reference, bb.item_id, i.name AS item_name,'
             . ' bb.quantity_total, bb.quantity_generated, bb.status, bb.status_detail,'
-            . ' bb.total_printed, bb.last_printed_at,'
+            . ' bb.total_printed, bb.last_printed_at, bb.verified_at,'
             . ' u_created.full_name AS created_by_name,'
             . ' u_printed.full_name AS last_printed_by_name,'
             . ' bb.created_at,'
@@ -183,7 +183,7 @@ class BatchService
         }
 
         $barcodes = $this->db->table('batch_barcodes')
-            ->select('barcode_code AS barcode, unit_number')
+            ->select('barcode_code AS barcode, unit_number, item_code, batch_reference')
             ->where('batch_id', $batchId)
             ->orderBy('unit_number', 'ASC')
             ->get()->getResultArray();
@@ -201,9 +201,9 @@ class BatchService
     public function details(string $batchId): ?array
     {
         $batch = $this->db->query(
-            'SELECT bb.id, bb.batch_reference, bb.item_id, i.name AS item_name,'
+            'SELECT bb.id, bb.batch_reference, bb.item_id, i.name AS item_name, i.barcode AS item_code,'
             . ' bb.quantity_total, bb.quantity_generated, bb.status_detail,'
-            . ' bb.total_printed, bb.last_printed_at, u.full_name AS last_printed_by, bb.created_at'
+            . ' bb.total_printed, bb.last_printed_at, bb.verified_at, u.full_name AS last_printed_by, bb.created_at'
             . ' FROM barcode_batches bb'
             . ' JOIN items i ON bb.item_id = i.id'
             . ' LEFT JOIN app_users u ON bb.last_printed_by = u.id'
@@ -244,6 +244,40 @@ class BatchService
             'print_history'  => $printHistory,
             'scan_stats'     => array_map('intval', $stats),
             'export_history' => $exports,
+        ];
+    }
+
+    /**
+     * QA gate: confirm a scanned code belongs to this batch. On the first
+     * successful sample scan the batch is stamped verified, so the operator has
+     * proven the printed barcodes read correctly before mass printing.
+     *
+     * @return array{matched: bool, unit_number?: int, barcode_code?: string, verified: bool}
+     */
+    public function verify(string $batchId, string $scanned, ?string $userId): array
+    {
+        $scanned = trim($scanned);
+
+        $row = $this->db->table('batch_barcodes')
+            ->select('unit_number, barcode_code')
+            ->where('batch_id', $batchId)
+            ->where('barcode_code', $scanned)
+            ->get()->getRowArray();
+
+        if ($row === null) {
+            return ['matched' => false, 'verified' => false];
+        }
+
+        $this->db->table('barcode_batches')
+            ->where('id', $batchId)
+            ->where('verified_at', null)
+            ->update(['verified_at' => date('Y-m-d H:i:s'), 'verified_by' => $userId]);
+
+        return [
+            'matched'     => true,
+            'unit_number' => (int) $row['unit_number'],
+            'barcode_code' => $row['barcode_code'],
+            'verified'    => true,
         ];
     }
 
@@ -314,7 +348,7 @@ class BatchService
         $batch = $detail['batch'];
 
         $rows = $this->db->query(
-            'SELECT bb.unit_number, bb.barcode_code, bb.status, bb.scanned_at, u.full_name AS scanned_by_name'
+            'SELECT bb.unit_number, bb.barcode_code, bb.item_code, bb.batch_reference, bb.status, bb.scanned_at, u.full_name AS scanned_by_name'
             . ' FROM batch_barcodes bb LEFT JOIN app_users u ON bb.scanned_by = u.id'
             . ' WHERE bb.batch_id = ? ORDER BY bb.unit_number ASC',
             [$batchId]
@@ -326,9 +360,11 @@ class BatchService
         fputcsv($out, ['Generated: ' . $batch['quantity_generated'] . ' / ' . $batch['quantity_total']]);
         fputcsv($out, ['Export Date: ' . date('Y-m-d H:i:s') . ' UTC']);
         fputcsv($out, []);
-        fputcsv($out, ['Unit Number', 'Barcode', 'Status', 'Scanned At', 'Scanned By']);
+        fputcsv($out, ['Item Code', 'Batch Reference', 'Unit Number', 'Barcode', 'Status', 'Scanned At', 'Scanned By']);
         foreach ($rows as $r) {
             fputcsv($out, [
+                $r['item_code'] ?? '—',
+                $r['batch_reference'] ?? $batch['batch_reference'],
                 $r['unit_number'],
                 $r['barcode_code'],
                 $r['status'],

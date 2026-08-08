@@ -31,7 +31,8 @@
         <td><?= (int) $b['scanned_count'] ?> / <?= (int) $b['total_barcodes'] ?></td>
         <td><span class="badge <?= ($b['status_detail'] ?? '') === 'FULLY_PRINTED' ? 'in' : (($b['status_detail'] ?? '') === 'PARTIALLY_PRINTED' ? 'out' : '') ?>">
           <?= esc(str_replace('_', ' ', $b['status_detail'] ?? 'CREATED')) ?>
-        </span></td>
+        </span>
+        <?php if (! empty($b['verified_at'])): ?><span class="badge in" title="Verified with a scanner">✓ Verified</span><?php endif ?></td>
         <td><?= esc(mf_local_datetime($b['last_printed_at'])) ?></td>
         <td class="actions">
           <a class="act" href="<?= base_url('batches/' . $b['id'] . '/export') ?>" title="Export CSV">

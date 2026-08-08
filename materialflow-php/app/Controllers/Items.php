@@ -121,6 +121,16 @@ class Items extends BaseController
         if ($data['reorder_level'] < 0) {
             return [$data, 'Reorder level cannot be negative.'];
         }
+        // Validate the barcode is Code 128-safe when one is supplied (a blank
+        // barcode is auto-generated as MF-##### by the caller). Item codes keep
+        // the hyphen.
+        if ($data['barcode'] !== '') {
+            helper('barcode');
+            $err = mf_is_code128_safe($data['barcode'], true);
+            if ($err !== null) {
+                return [$data, $err];
+            }
+        }
 
         return [$data, null];
     }

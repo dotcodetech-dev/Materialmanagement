@@ -44,6 +44,37 @@ class Batches extends BaseController
         return $this->response->setJSON($detail);
     }
 
+    /**
+     * QA gate — the operator scans a printed sample; we confirm it belongs to
+     * the batch and (on first match) stamp the batch verified.
+     */
+    public function verify(string $batchId)
+    {
+        $body    = $this->request->getJSON(true) ?? [];
+        $scanned = trim((string) ($body['scanned'] ?? ''));
+
+        if ($scanned === '') {
+            return $this->jsonError('Scanned value required', 400);
+        }
+
+        $result = (new BatchService())->verify($batchId, $scanned, session('user_id'));
+
+        if (! $result['matched']) {
+            return $this->response->setStatusCode(404)->setJSON([
+                'matched' => false,
+                'message' => 'That code does not belong to this batch.',
+            ]);
+        }
+
+        return $this->response->setJSON([
+            'matched'      => true,
+            'unit_number'  => $result['unit_number'],
+            'barcode_code' => $result['barcode_code'],
+            'verified'     => true,
+            'message'      => 'Verified — Unit ' . $result['unit_number'] . ' matches.',
+        ]);
+    }
+
     public function recordPrint(string $batchId)
     {
         $body   = $this->request->getJSON(true) ?? [];

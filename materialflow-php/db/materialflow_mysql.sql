@@ -73,6 +73,8 @@ CREATE TABLE barcode_batches (
   last_printed_at DATETIME NULL,
   last_printed_by CHAR(36) NULL,
   barcode_prefix VARCHAR(64) NOT NULL,
+  verified_at DATETIME NULL,
+  verified_by CHAR(36) NULL,
   created_by CHAR(36) NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT chk_batches_qty CHECK (quantity_total > 0),
@@ -87,15 +89,22 @@ CREATE TABLE barcode_batches (
 CREATE TABLE batch_barcodes (
   id CHAR(36) NOT NULL PRIMARY KEY,
   batch_id CHAR(36) NOT NULL,
+  -- Compact, globally-unique Code 128 value printed on each unit (e.g. MFU000000123).
+  -- It encodes ONLY this lookup id; item/batch/unit are the columns below.
   barcode_code VARCHAR(64) COLLATE utf8mb4_bin NOT NULL UNIQUE,
+  unit_serial BIGINT UNSIGNED NOT NULL,   -- global running serial (numeric core of barcode_code)
   item_id CHAR(36) NOT NULL,
-  unit_number INT NOT NULL,
+  item_code VARCHAR(64) NULL,             -- snapshot of items.barcode at generation
+  batch_reference VARCHAR(64) NULL,       -- snapshot of the batch reference at generation
+  unit_number INT NOT NULL,               -- unit serial within the batch (human "Unit N")
   status VARCHAR(20) NOT NULL DEFAULT 'UNSCANNED',
   scanned_at DATETIME NULL,
   scanned_by CHAR(36) NULL,
   movement_id CHAR(36) NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT chk_barcodes_status CHECK (status IN ('UNSCANNED', 'SCANNED', 'DISPATCHED')),
+  CONSTRAINT uq_barcodes_serial UNIQUE (unit_serial),
+  CONSTRAINT uq_barcodes_batch_unit UNIQUE (batch_id, unit_number),
   CONSTRAINT fk_barcodes_batch FOREIGN KEY (batch_id) REFERENCES barcode_batches (id),
   CONSTRAINT fk_barcodes_item FOREIGN KEY (item_id) REFERENCES items (id),
   CONSTRAINT fk_barcodes_scanner FOREIGN KEY (scanned_by) REFERENCES app_users (id),

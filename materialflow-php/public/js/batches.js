@@ -61,6 +61,8 @@
         document.getElementById("batchPrintBtn").onclick = () => {
           window.open("/batches/" + data.batch_id + "/print-labels", "_blank");
         };
+
+        setupVerify(data.batch_id);
       } catch (err) {
         flash("❌ " + err.message);
       } finally {
@@ -68,6 +70,43 @@
         btn.textContent = "Generate barcodes";
       }
     });
+  }
+
+  // QA gate: scanning a printed sample here confirms the barcode reads correctly.
+  function setupVerify(batchId) {
+    const input = document.getElementById("verifyInput");
+    const out = document.getElementById("verifyResult");
+    if (!input || !out) return;
+    input.value = "";
+    out.hidden = true;
+    let busy = false;
+
+    async function verify() {
+      const code = input.value.trim();
+      if (!code || busy) return;
+      busy = true;
+      try {
+        const res = await apiFetch("/api/batches/" + batchId + "/verify", {
+          method: "POST",
+          body: { scanned: code },
+        });
+        out.hidden = false;
+        out.style.color = "#0f766e";
+        out.textContent = "✓ " + (res.message || "Verified");
+      } catch (err) {
+        out.hidden = false;
+        out.style.color = "#b91c1c";
+        out.textContent = "❌ " + err.message;
+      } finally {
+        busy = false;
+        input.value = "";
+        input.focus();
+      }
+    }
+
+    input.onkeydown = (e) => {
+      if (e.key === "Enter") { e.preventDefault(); verify(); }
+    };
   }
 
   // --- Batch History page ---
@@ -93,9 +132,10 @@
         const d = await apiFetch("/api/batches/" + detailBatchId);
         const b = d.batch;
         document.getElementById("bdReference").textContent = b.batch_reference;
-        document.getElementById("bdItem").textContent = b.item_name;
+        document.getElementById("bdItem").textContent = b.item_code ? b.item_name + " (" + b.item_code + ")" : b.item_name;
         document.getElementById("bdGenerated").textContent = b.quantity_generated + " / " + b.quantity_total;
-        document.getElementById("bdStatus").textContent = (b.status_detail || "CREATED").replace(/_/g, " ");
+        document.getElementById("bdStatus").textContent = (b.status_detail || "CREATED").replace(/_/g, " ")
+          + (b.verified_at ? " · ✓ Verified" : "");
         document.getElementById("bdTotal").textContent = d.scan_stats.total;
         document.getElementById("bdScanned").textContent = d.scan_stats.scanned;
         document.getElementById("bdDispatched").textContent = d.scan_stats.dispatched || 0;
