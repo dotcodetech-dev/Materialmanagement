@@ -26,7 +26,8 @@
       /* non-JSON response */
     }
     if (!res.ok) {
-      const err = new Error((data && data.error) || "Request failed (" + res.status + ")");
+      // Prefer the human-readable `message`; fall back to the machine `error` code.
+      const err = new Error((data && (data.message || data.error)) || "Request failed (" + res.status + ")");
       err.status = res.status;
       err.details = (data && data.details) || null;
       throw err;

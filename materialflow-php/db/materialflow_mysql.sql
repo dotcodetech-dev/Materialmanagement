@@ -95,7 +95,7 @@ CREATE TABLE batch_barcodes (
   scanned_by CHAR(36) NULL,
   movement_id CHAR(36) NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT chk_barcodes_status CHECK (status IN ('UNSCANNED', 'SCANNED')),
+  CONSTRAINT chk_barcodes_status CHECK (status IN ('UNSCANNED', 'SCANNED', 'DISPATCHED')),
   CONSTRAINT fk_barcodes_batch FOREIGN KEY (batch_id) REFERENCES barcode_batches (id),
   CONSTRAINT fk_barcodes_item FOREIGN KEY (item_id) REFERENCES items (id),
   CONSTRAINT fk_barcodes_scanner FOREIGN KEY (scanned_by) REFERENCES app_users (id),

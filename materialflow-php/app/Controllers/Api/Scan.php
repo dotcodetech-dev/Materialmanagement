@@ -74,15 +74,43 @@ class Scan extends BaseController
         try {
             $batchRow = $this->findBatchBarcode($barcode, true, $db);
 
-            // One-time-scan rule applies ONLY to INWARD scans — inward records
-            // that a physical unit entered the warehouse, so scanning the same
-            // batch label twice means a double-count. OUTWARD scans identify
-            // which item is leaving; the same physical label naturally gets
-            // scanned again on the way out and must be allowed.
-            if (! $isOut && $batchRow !== null && $batchRow['status'] === 'SCANNED') {
-                $db->transRollback();
+            // ---- Batch-unit lifecycle state machine ----
+            // Each batch label is ONE physical unit that moves through:
+            //   UNSCANNED (generated) --inward--> SCANNED (in stock) --outward--> DISPATCHED (gone)
+            // Inward is valid only from UNSCANNED; outward only from SCANNED.
+            // This makes every unit receivable exactly once and dispatchable
+            // exactly once, so the ledger records +1 then -1 per unit and a
+            // single physical item can never be issued (or received) twice.
+            if ($batchRow !== null) {
+                $status = $batchRow['status'];
+                if (! $isOut) {
+                    // INWARD (receive into stock)
+                    if ($status !== 'UNSCANNED') {
+                        $db->transRollback();
 
-                return $this->alreadyScanned($batchRow);
+                        return $this->batchConflict(
+                            $batchRow,
+                            $status === 'DISPATCHED'
+                                ? 'This unit was already dispatched — it cannot be received again.'
+                                : 'This unit was already received into stock.'
+                        );
+                    }
+                } else {
+                    // OUTWARD (dispatch from stock)
+                    if ($status === 'UNSCANNED') {
+                        $db->transRollback();
+
+                        return $this->jsonError('This unit is not in stock yet. Scan it inward before dispatching.', 400);
+                    }
+                    if ($status === 'DISPATCHED') {
+                        $db->transRollback();
+
+                        return $this->batchConflict($batchRow, 'This unit was already dispatched.');
+                    }
+                }
+
+                // Serialize concurrent scans against this item's balance.
+                $db->query('SELECT id FROM items WHERE id = ? FOR UPDATE', [$batchRow['item_id']]);
             }
 
             $itemRow = null;
@@ -102,15 +130,15 @@ class Scan extends BaseController
                         'message' => 'Barcode not found',
                     ]);
                 }
-            } else {
-                // Serialize concurrent scans against the same item's balance.
-                $db->query('SELECT id FROM items WHERE id = ? FOR UPDATE', [$batchRow['item_id']]);
             }
 
             $itemId   = $batchRow['item_id'] ?? $itemRow['id'];
             $itemName = $batchRow['item_name'] ?? $itemRow['name'];
             $itemUnit = $batchRow['unit'] ?? $itemRow['unit'];
 
+            // Outward stock guard. For batch units in SCANNED state this always
+            // passes (the unit itself is +1 stock); it's the real guard for
+            // plain item-barcode scans, which have no per-unit tracking.
             if ($isOut) {
                 $available = $this->balanceInTxn($db, $itemId);
                 if ($available < 1) {
@@ -122,7 +150,8 @@ class Scan extends BaseController
 
             if ($batchRow !== null) {
                 $reference = 'Batch: ' . $batchRow['batch_reference'] . ', Unit: ' . $batchRow['unit_number'];
-                $notes     = 'Batch scan - Unit ' . $batchRow['unit_number'] . '/' . $batchRow['batch_reference'];
+                $notes     = ($isOut ? 'Batch dispatch' : 'Batch receipt')
+                    . ' - Unit ' . $batchRow['unit_number'] . '/' . $batchRow['batch_reference'];
             } else {
                 $reference = null;
                 $notes     = 'Quick scan - ' . date('H:i:s');
@@ -137,25 +166,31 @@ class Scan extends BaseController
                 'recorded_by'      => $userId,
             ]);
 
-            // Mark the batch barcode as SCANNED only on INWARD (one-time-scan
-            // rule). OUTWARD leaves the batch_barcodes row untouched — the
-            // stock_movements row is the source of truth for balance either way.
-            if (! $isOut && $batchRow !== null) {
+            // Advance the unit's lifecycle state. The WHERE on the expected
+            // from-status makes this a compare-and-set: if a concurrent scan
+            // moved the unit first, affectedRows() is 0 and we roll back.
+            if ($batchRow !== null) {
+                $fromStatus = $isOut ? 'SCANNED' : 'UNSCANNED';
+                $newStatus  = $isOut ? 'DISPATCHED' : 'SCANNED';
+
                 $db->table('batch_barcodes')
                     ->where('id', $batchRow['id'])
-                    ->where('status', 'UNSCANNED')
+                    ->where('status', $fromStatus)
                     ->update([
-                        'status'      => 'SCANNED',
+                        'status'      => $newStatus,
                         'scanned_at'  => date('Y-m-d H:i:s'),
                         'scanned_by'  => $userId,
                         'movement_id' => $movementId,
                     ]);
 
                 if ($db->affectedRows() === 0) {
-                    // Lost the race despite the lock (defensive): treat as already scanned.
+                    // Lost the race despite the lock (defensive).
                     $db->transRollback();
 
-                    return $this->alreadyScanned($this->findBatchBarcode($barcode, false));
+                    return $this->batchConflict(
+                        $this->findBatchBarcode($barcode, false),
+                        'This unit was just updated by another scan. Please rescan.'
+                    );
                 }
             }
 
@@ -211,12 +246,23 @@ class Scan extends BaseController
 
     private function alreadyScanned(?array $row)
     {
+        return $this->batchConflict($row, 'This barcode was already scanned');
+    }
+
+    /**
+     * 409 for any batch-unit lifecycle conflict (already received / already
+     * dispatched / lost race). Carries the friendly message plus who/when
+     * details so the scan UI can tell the operator exactly what happened.
+     */
+    private function batchConflict(?array $row, string $message)
+    {
         return $this->response->setStatusCode(409)->setJSON([
             'valid'   => false,
-            'error'   => 'BARCODE_ALREADY_SCANNED',
-            'message' => 'This barcode was already scanned',
+            'error'   => 'BARCODE_CONFLICT',
+            'message' => $message,
             'details' => [
                 'barcode_code'    => $row['barcode_code'] ?? null,
+                'status'          => $row['status'] ?? null,
                 'scanned_at'      => $row['scanned_at'] ?? null,
                 'scanned_by'      => $row['scanned_by_name'] ?? 'Unknown user',
                 'batch_reference' => $row['batch_reference'] ?? null,

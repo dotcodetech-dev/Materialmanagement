@@ -152,7 +152,10 @@ class BatchService
             . ' u_created.full_name AS created_by_name,'
             . ' u_printed.full_name AS last_printed_by_name,'
             . ' bb.created_at,'
-            . " COUNT(CASE WHEN bb2.status = 'SCANNED' THEN 1 END) AS scanned_count,"
+            // "Scanned" on the batch list = units received into stock. Once a
+            // unit is dispatched it was still received, so count anything that
+            // has left the UNSCANNED state.
+            . " COUNT(CASE WHEN bb2.status <> 'UNSCANNED' THEN 1 END) AS scanned_count,"
             . ' COUNT(bb2.id) AS total_barcodes,'
             . ' (SELECT COUNT(*) FROM batch_history WHERE batch_id = bb.id) AS total_actions,'
             . ' (SELECT COUNT(*) FROM batch_exports WHERE batch_id = bb.id) AS total_exports'
@@ -223,6 +226,7 @@ class BatchService
         $stats = $this->db->query(
             'SELECT COUNT(*) AS total,'
             . " COUNT(CASE WHEN status = 'SCANNED' THEN 1 END) AS scanned,"
+            . " COUNT(CASE WHEN status = 'DISPATCHED' THEN 1 END) AS dispatched,"
             . " COUNT(CASE WHEN status = 'UNSCANNED' THEN 1 END) AS unscanned"
             . ' FROM batch_barcodes WHERE batch_id = ?',
             [$batchId]

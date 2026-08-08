@@ -98,6 +98,7 @@
         document.getElementById("bdStatus").textContent = (b.status_detail || "CREATED").replace(/_/g, " ");
         document.getElementById("bdTotal").textContent = d.scan_stats.total;
         document.getElementById("bdScanned").textContent = d.scan_stats.scanned;
+        document.getElementById("bdDispatched").textContent = d.scan_stats.dispatched || 0;
         document.getElementById("bdUnscanned").textContent = d.scan_stats.unscanned;
 
         const max = parseInt(b.quantity_generated, 10) || 1;

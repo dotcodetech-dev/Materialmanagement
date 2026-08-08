@@ -69,11 +69,12 @@
         <p><b>Status:</b> <span id="bdStatus"></span></p>
       </div>
 
-      <h3 style="margin:14px 0 6px">Scan Status</h3>
-      <div class="stats" style="grid-template-columns:repeat(3,1fr)">
+      <h3 style="margin:14px 0 6px">Unit Status</h3>
+      <div class="stats" style="grid-template-columns:repeat(4,1fr)">
         <div class="stat"><div><p>Total</p><strong id="bdTotal">0</strong></div></div>
-        <div class="stat"><div><p>Scanned</p><strong id="bdScanned">0</strong></div></div>
-        <div class="stat"><div><p>Unscanned</p><strong id="bdUnscanned">0</strong></div></div>
+        <div class="stat"><div><p>In Stock</p><strong id="bdScanned">0</strong></div></div>
+        <div class="stat"><div><p>Dispatched</p><strong id="bdDispatched">0</strong></div></div>
+        <div class="stat"><div><p>Pending</p><strong id="bdUnscanned">0</strong></div></div>
       </div>
 
       <?php if ($canEdit): ?>

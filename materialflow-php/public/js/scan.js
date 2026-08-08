@@ -50,9 +50,10 @@
       flash(data.is_batch ? "✓ " + itemName + " - Unit " + unitNumber + " scanned" : "✓ " + itemName + " saved");
     } catch (err) {
       if (err.status === 409 && err.details) {
-        const when = err.details.scanned_at ? new Date(err.details.scanned_at.replace(" ", "T") + "Z").toLocaleString() : "unknown time";
         const scannedBy = String(err.details.scanned_by || "unknown user").substring(0, 100);
-        flash("❌ Barcode already scanned! Previously scanned by " + scannedBy + " on " + when);
+        const when = err.details.scanned_at ? new Date(err.details.scanned_at.replace(" ", "T") + "Z").toLocaleString() : "";
+        const detail = when ? " (by " + scannedBy + " on " + when + ")" : "";
+        flash("❌ " + err.message + detail);
       } else {
         flash("❌ " + err.message);
       }
