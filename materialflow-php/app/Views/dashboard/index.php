@@ -55,7 +55,7 @@
             <span class="material-symbols-outlined"><?= $in ? 'south_west' : 'north_east' ?></span>
           </span>
           <p><b><?= esc(str_replace('_', ' ', $m['movement_type'])) ?></b> · <?= esc($m['item_name']) ?>
-            <small><?= esc(date('d M Y, g:i a', strtotime($m['occurred_at']))) ?> · <?= $m['quantity'] + 0 ?> <?= esc($m['item_unit']) ?></small>
+            <small><?= esc(mf_local_datetime($m['occurred_at'])) ?> · <?= $m['quantity'] + 0 ?> <?= esc($m['item_unit']) ?></small>
           </p>
         </div>
       <?php endforeach ?>

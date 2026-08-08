@@ -32,7 +32,7 @@
         <td><span class="badge <?= ($b['status_detail'] ?? '') === 'FULLY_PRINTED' ? 'in' : (($b['status_detail'] ?? '') === 'PARTIALLY_PRINTED' ? 'out' : '') ?>">
           <?= esc(str_replace('_', ' ', $b['status_detail'] ?? 'CREATED')) ?>
         </span></td>
-        <td><?= $b['last_printed_at'] ? esc(date('d M Y, H:i', strtotime($b['last_printed_at']))) : '—' ?></td>
+        <td><?= esc(mf_local_datetime($b['last_printed_at'])) ?></td>
         <td class="actions">
           <a class="act" href="<?= base_url('batches/' . $b['id'] . '/export') ?>" title="Export CSV">
             <span class="material-symbols-outlined">download</span>

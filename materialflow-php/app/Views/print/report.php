@@ -40,7 +40,7 @@ if (! empty($filters['recorded_by'])) {
   <h1><?= esc($brand['company_name']) ?></h1>
   <div class="company"><?= esc(implode(' · ', array_filter([$brand['address'], $brand['phone'], $brand['email']]))) ?></div>
   <h2><?= esc($title) ?></h2>
-  <div class="meta">Generated: <?= date('d M Y, H:i') ?> UTC<?= $meta !== [] ? ' | ' . esc(implode(' | ', $meta)) : '' ?></div>
+  <div class="meta">Generated: <?= esc(mf_local_datetime(gmdate('Y-m-d H:i:s'))) ?><?= $meta !== [] ? ' | ' . esc(implode(' | ', $meta)) : '' ?></div>
 
 <?php if ($reportType === 'stock'): ?>
   <table>
@@ -66,7 +66,7 @@ if (! empty($filters['recorded_by'])) {
     <tbody>
     <?php $totalQty = 0; foreach ($rows as $m): $totalQty += $m['quantity']; ?>
       <tr>
-        <td><?= esc(date('d M Y, g:i a', strtotime($m['occurred_at']))) ?></td>
+        <td><?= esc(mf_local_datetime($m['occurred_at'])) ?></td>
         <td><?= esc(str_replace('_', ' ', $m['movement_type'])) ?></td>
         <td><?= esc($m['item_name']) ?></td>
         <td><?= esc($m['item_category']) ?></td>

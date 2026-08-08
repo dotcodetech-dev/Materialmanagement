@@ -74,7 +74,12 @@ class Scan extends BaseController
         try {
             $batchRow = $this->findBatchBarcode($barcode, true, $db);
 
-            if ($batchRow !== null && $batchRow['status'] === 'SCANNED') {
+            // One-time-scan rule applies ONLY to INWARD scans — inward records
+            // that a physical unit entered the warehouse, so scanning the same
+            // batch label twice means a double-count. OUTWARD scans identify
+            // which item is leaving; the same physical label naturally gets
+            // scanned again on the way out and must be allowed.
+            if (! $isOut && $batchRow !== null && $batchRow['status'] === 'SCANNED') {
                 $db->transRollback();
 
                 return $this->alreadyScanned($batchRow);
@@ -132,7 +137,10 @@ class Scan extends BaseController
                 'recorded_by'      => $userId,
             ]);
 
-            if ($batchRow !== null) {
+            // Mark the batch barcode as SCANNED only on INWARD (one-time-scan
+            // rule). OUTWARD leaves the batch_barcodes row untouched — the
+            // stock_movements row is the source of truth for balance either way.
+            if (! $isOut && $batchRow !== null) {
                 $db->table('batch_barcodes')
                     ->where('id', $batchRow['id'])
                     ->where('status', 'UNSCANNED')

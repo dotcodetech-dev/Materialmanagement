@@ -18,7 +18,7 @@
     <?php foreach ($movements as $m): ?>
       <?php $in = in_array($m['movement_type'], ['INWARD', 'RETURN_IN', 'ADJUSTMENT_IN'], true); ?>
       <tr>
-        <td><?= esc(date('d M Y, g:i a', strtotime($m['occurred_at']))) ?></td>
+        <td><?= esc(mf_local_datetime($m['occurred_at'])) ?></td>
         <td><span class="badge <?= $in ? 'in' : 'out' ?>"><?= esc(str_replace('_', ' ', $m['movement_type'])) ?></span></td>
         <td><b><?= esc($m['item_name']) ?></b><small><?= esc($m['item_barcode']) ?></small></td>
         <td><?= $in ? '+' : '−' ?><?= $m['quantity'] + 0 ?> <?= esc($m['item_unit']) ?></td>

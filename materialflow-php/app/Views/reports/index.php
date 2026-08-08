@@ -71,7 +71,7 @@ $hasFilter = $filters['from'] || $filters['to'] || $filters['recorded_by'] || $f
     <tbody>
     <?php $totalQty = 0; foreach ($rows as $m): $totalQty += $m['quantity']; ?>
       <tr>
-        <td><?= esc(date('d M Y, g:i a', strtotime($m['occurred_at']))) ?></td>
+        <td><?= esc(mf_local_datetime($m['occurred_at'])) ?></td>
         <td><span class="badge <?= $reportType === 'inward' ? 'in' : 'out' ?>"><?= esc(str_replace('_', ' ', $m['movement_type'])) ?></span></td>
         <td><?= esc($m['item_name']) ?></td>
         <td><?= esc($m['item_category']) ?></td>
