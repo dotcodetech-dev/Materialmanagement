@@ -182,7 +182,10 @@ class Scan extends BaseController
             . ' JOIN barcode_batches bat ON bb.batch_id = bat.id'
             . ' LEFT JOIN app_users u ON bb.scanned_by = u.id'
             . ' WHERE bb.barcode_code = ?'
-            . ($forUpdate ? ' FOR UPDATE OF bb' : '');
+            // MySQL 8 supports `FOR UPDATE OF bb` (lock only the batch_barcodes
+            // row) but MariaDB doesn't understand `OF <alias>`. Use plain
+            // FOR UPDATE — locks all joined rows, still correct.
+            . ($forUpdate ? ' FOR UPDATE' : '');
 
         return $db->query($sql, [$barcode])->getRowArray() ?: null;
     }
